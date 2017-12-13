@@ -1,0 +1,92 @@
+&tlmm {
+	pmx_ts {
+		ts_intr_default: ts_intr_default {
+			mux {
+				pins = "gpio125";
+				function = "gpio";
+			};
+
+			config {
+				pins = "gpio125";
+				drive-strength = <2>;
+				bias-pull-up;
+			};
+		};
+
+		ts_rst_default: ts_rst_default {
+			mux {
+				pins = "gpio96";
+				function = "gpio";
+			};
+
+			config {
+				pins = "gpio96";
+				drive-strength = <2>;
+				bias-disable; /* No PULL */
+				output-high;
+			};
+		};
+
+		ts_swi_default: ts_swi_default {
+			mux {
+				pins = "gpioi69";
+				function = "gpio";
+			};
+
+			config {
+				pins = "gpio69";
+				drive-strength = <2>;
+				bias-disable;
+				output-low;
+			};
+		};
+	};
+};
+
+&i2c_5_active {
+	config {
+		drive-strength = <8>;
+	};
+};
+&i2c_5_active {
+	config {
+		drive-strength = <8>;
+	};
+};
+
+&i2c_5 {
+	status = "okay";
+
+	synaptics_dsx@20 {
+		compatible = "synaptics,dsx-i2c";
+		reg = <0x20>;
+		interrupt-parent = <&tlmm>;
+		interrupts = <125 0x2008>;
+		synaptics,irq-gpio = <&tlmm 125 0x2008>;  /* IRQF_ONESHOT | IRQF_TRIGGER_LOW */
+		synaptics,irq-on-state = <0>;
+		synaptics,reset-gpio = <&tlmm 96 0x00>;
+		synaptics,reset-on-state = <0>;
+		synaptics,reset-active-ms = <1>;
+		synaptics,reset-delay-ms = <150>;
+		synaptics,lcm-reset-seq = <1>;
+		synaptics,reset-lcm-delay-ms = <1>;
+		synaptics,switch-gpio = <&tlmm 69 0x00>;
+		synaptics,switch-hub-state = <1>;
+		synaptics,display-coords = <1440 2880>;
+		synaptics,update-feature = <0>;
+		synaptics,support-glove = <1>;
+		synaptics,glove-cmd-num = <5>;
+		synaptics,glove-reg-name = "F12_2D_CTRL10_00_00", "F12_2D_CTRL10_00_01",
+					"F12_2D_CTRL10_02_00", "F12_2D_CTRL15_00_00", "F12_2D_CTRL15_00_01";
+		synaptics,glove-setting = <0x10 0x12 0x28 0x14 0x14>;
+		synaptics,normal-setting = <0x28 0x32 0x46 0x40 0x40>;
+		synaptics,mode-f54-force-update;
+		synaptics,sensor-sleep-mode = <1>;
+		synaptics,set-wg-delay = <50>;
+		synaptics,set-sleep-delay = <5>;
+		synaptics,f51-set-pmic-offset = <0xB>;
+		synaptics,set-pmic-delay = <250>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&ts_intr_default &ts_swi_default &ts_rst_default>;
+	};
+};

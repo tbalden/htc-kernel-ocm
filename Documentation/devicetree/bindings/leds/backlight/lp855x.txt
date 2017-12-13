@@ -1,0 +1,115 @@
+lp855x bindings
+
+Required properties:
+  - compatible: "ti,lp8550", "ti,lp8551", "ti,lp8552", "ti,lp8553",
+                "ti,lp8555", "ti,lp8556", "ti,lp8557"
+  - reg: I2C slave address (u8)
+  - dev-ctrl: Value of DEVICE CONTROL register (u8). It depends on the device.
+
+Optional properties:
+  - bl-name: Backlight device name (string)
+  - init-brt: Initial value of backlight brightness (u8)
+  - pwm-period: PWM period value. Set only PWM input mode used (u32)
+  - rom-addr: Register address of ROM area to be updated (u8)
+  - rom-val: Register value to be updated (u8)
+  - power-supply: Regulator which controls the 3V rail
+  - torch-brt: torch brightness when flash mode use
+  - enable-gpios: bl enable gpio pin
+  - normal-power-on-cmds: bl normal power on commands
+  - aod-power-on-cmds: bl aod power on commands
+  - aod-disable-cmds: bl aod disable commands
+  - aod-enable-cmds: bl aod enable commands
+
+AOD BL control is decided by FB event, below list fb status change to BL control action.
+1.FB_BLANK_POWERDOWN : disable gpio
+2.FB_BLANK_POWERDOWN --> FB_BLANK_UNBLANK : enable gpio then run normal-power-on-cmds
+3.FB_BLANK_POWERDOWN --> FB_BLANK_NORMAL : enable gpio then run aod-power-on-cmds
+4.FB_BLANK_NORMAL --> FB_BLANK_UNBLANK : run aod-disable-cmds
+5.FB_BLANK_UNBLANK --> FB_BLANK_NORMAL : run aod-enable-cmds
+
+Example:
+
+	/* LP8555 */
+	backlight@2c {
+		compatible = "ti,lp8555";
+		reg = <0x2c>;
+
+		dev-ctrl = /bits/ 8 <0x00>;
+		pwm-period = <10000>;
+
+		/* 4V OV, 4 output LED0 string enabled */
+		rom_14h {
+			rom-addr = /bits/ 8 <0x14>;
+			rom-val = /bits/ 8 <0xcf>;
+		};
+
+		/* Heavy smoothing, 24ms ramp time step */
+		rom_15h {
+			rom-addr = /bits/ 8 <0x15>;
+			rom-val = /bits/ 8 <0xc7>;
+		};
+
+		/* 4 output LED1 string enabled */
+		rom_19h {
+			rom-addr = /bits/ 8 <0x19>;
+			rom-val = /bits/ 8 <0x0f>;
+		};
+	};
+
+	/* LP8556 */
+	backlight@2c {
+		compatible = "ti,lp8556";
+		reg = <0x2c>;
+
+		bl-name = "lcd-bl";
+		dev-ctrl = /bits/ 8 <0x85>;
+		init-brt = /bits/ 8 <0x10>;
+		torch-brt = <2048>;
+		enable-gpios = <&tlmm 124 0>;
+		normal-power-on-cmds = [
+			01 80
+			00 FF
+			16 3f
+			A1 9F
+			A2 20
+			A3 46
+			A9 A0
+			AE 01
+			A8 24
+			01 87
+			];
+		aod-power-on-cmds = [
+			01 80
+			00 FF
+			16 0C
+			A1 9F
+			A2 20
+			A3 46
+			A9 A0
+			AE 01
+			A8 24
+			01 87
+			];
+		aod-disable-cmds = [
+			16 3f
+			];
+		aod-enable-cmds = [
+			16 0C
+			];
+	};
+
+	/* LP8557 */
+	backlight@2c {
+		compatible = "ti,lp8557";
+		reg = <0x2c>;
+		power-supply = <&backlight_vdd>;
+
+		dev-ctrl = /bits/ 8 <0x41>;
+		init-brt = /bits/ 8 <0x0a>;
+
+		/* 4V OV, 4 output LED string enabled */
+		rom_14h {
+			rom-addr = /bits/ 8 <0x14>;
+			rom-val = /bits/ 8 <0xcf>;
+		};
+	};

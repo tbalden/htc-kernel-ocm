@@ -1,0 +1,346 @@
+/* Copyright (c) 2016, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+
+#include "../qcom/msm8998-mtp.dtsi"
+#include "../qcom/msm8998-htc-common.dtsi"
+#include "dsi-panel-ocm.dtsi"
+#include "../qcom/msm8998-audio-htc_ocn.dtsi"
+#include "msm8998-key-ocm.dtsi"
+#include "../qcom/msm8998-htc_ocn_hall-sensor.dtsi"
+#include "../qcom/msm8998-htc_ocn-fingerprint.dtsi"
+#include "../qcom/msm8998-htc-nanohub.dtsi"
+#include "../qcom/msm8998-htc_ocn_nfc_nxp.dtsi"
+#include "../qcom/msm8998-htc_ocn_regulator.dtsi"
+#include "msm8998-vibrator-ocm.dtsi"
+#include "msm8998-htc_ocm-usb.dtsi"
+#include "msm8998-touch-ocm.dtsi"
+#include "msm8998-htc_ocm_led.dtsi"
+
+/ {
+        model = "HTC Corporation. MSM8998 v2.1 OCM";
+        compatible = "qcom,msm8998-mtp", "qcom,msm8998", "qcom,mtp";
+};
+
+/ {
+	firmware: firmware {
+		android {
+			compatible = "android,firmware";
+			fstab {
+				compatible = "android,fstab";
+				vendor {
+					compatible = "android,vendor";
+					dev = "/dev/block/platform/soc/1da4000.ufshc/by-name/vendor";
+					type = "ext4";
+					mnt_flags = "ro,barrier=1,discard";
+					fsmgr_flags = "wait,verify";
+					status = "ok";
+				};
+
+				system {
+					compatible = "android,system";
+					dev = "/dev/block/platform/soc/1da4000.ufshc/by-name/system";
+					type = "ext4";
+					mnt_flags = "ro,barrier=1,discard";
+					fsmgr_flags = "wait,verify";
+					status = "ok";
+				};
+
+			};
+		};
+	};
+};
+
+&tlmm {
+		pcie0 {
+			pcie0_perst_default: pcie0_perst_default {
+				mux {
+				/delete-property/pins;
+				};
+
+				config {
+				/delete-property/pins;
+				};
+			};
+		};
+};
+
+&pcie0 {
+   /delete-property/perst-gpio;
+};
+
+&i2c_5 {
+	/delete-node/ synaptics@20;
+};
+
+&soc {
+	tlmm: pinctrl@03400000 {
+		compatible = "qcom,msm8998-pinctrl";
+		reg = <0x03400000 0xc00000>;
+		interrupts = <0 208 0>;
+
+		sdc2_cd_on: sdc2_cd_on {
+			mux {
+				pins = "gpio95";
+				function = "gpio";
+			};
+
+			config {
+				pins = "gpio95";
+				/delete-property/bias-pull-up;
+				bias-disable;           /* no pull */
+				drive-strength = <2>;   /* 2 MA */
+			};
+		};
+
+		sdc2_cd_off: sdc2_cd_off {
+			mux {
+				pins = "gpio95";
+				function = "gpio";
+			};
+
+			config {
+				pins = "gpio95";
+				/delete-property/bias-pull-up;
+				bias-disable;           /* no pull */
+				drive-strength = <2>;   /* 2 MA */
+			};
+
+		};
+
+		tusb1044_vdd_active: tusb1044_vdd_active {
+			mux {
+				pins = "gpio33";
+				function = "gpio";
+			};
+
+			config {
+				pins = "gpio33";
+				bias-disable;
+				output-low;
+				drive-strength = <2>;
+			};
+		};
+
+		tusb1044_vdd_sleep: tusb1044_vdd_sleep {
+                        mux {
+                                pins = "gpio33";
+                                function = "gpio";
+                        };
+
+                        config {
+                                pins = "gpio33";
+                                bias-disable;
+                                output-high;
+                                drive-strength = <2>;
+                        };
+		};
+
+		tusb1044_1v8_active: tusb1044_1v8_active {
+			mux {
+				pins = "gpio77";
+				function = "gpio";
+			};
+
+			config {
+				pins = "gpio77";
+				bias-disable;
+				output-high;
+				drive-strength = <2>;
+			};
+		};
+
+		tusb1044_1v8_sleep: tusb1044_1v8_sleep {
+			mux {
+                                pins = "gpio77";
+                                function = "gpio";
+                        };
+
+                        config {
+                                pins = "gpio77";
+                                bias-disable;
+                                output-low;
+                                drive-strength = <2>;
+                        };
+                };
+	};
+};
+
+&i2c_8 {
+	tusb1044: tusb1044-i2c@44 {
+		compatible = "ti,tusb1044-i2c";
+		reg = <0x44>;
+		htc,layout-type = <1>; /* chip maybe removed */
+		pinctrl-names = "pin_active", "pin_sleep", "vdd_pin_active", "vdd_pin_sleep";
+		pinctrl-0 = <&tusb1044_1v8_active>;
+		pinctrl-1 = <&tusb1044_1v8_sleep>;
+		pinctrl-2 = <&tusb1044_vdd_active>;
+		pinctrl-3 = <&tusb1044_vdd_sleep>;
+	};
+};
+
+&vendor {
+	ocm_batterydata: qcom,battery-data {
+		/delete-node/ qcom,itech_3000mah;
+		/delete-node/ qcom,ascent_3450mah;
+		/delete-node/ qcom,demo_6000mah;
+		#include "batterydata-ocm-id1.dtsi"
+		#include "batterydata-ocm-unknown.dtsi"
+	};
+};
+
+&pmi8998_charger {
+	qcom,battery-data = <&ocm_batterydata>;
+	htc,qc3-vol-limit = <10>;
+	htc,qc3-curr-limit-ma = <2200>;
+	qcom,auto-recharge-soc;
+	qcom,otg-cl-ua = <1000000>;
+};
+
+&pmi8998_fg {
+	qcom,fg-jeita-thresholds = <2 15 47 55>;
+	qcom,fg-jeita-hyst-temp = <2>;
+	qcom,fg-recharge-soc-thr = <97>;
+	qcom,fg-chg-term-current = <50>;
+	qcom,fg-cutoff-voltage = <3400>;
+	qcom,fg-rsense-sel = <0>;
+};
+
+/ {
+	htc_battery_dt {
+		compatible = "htc,htc_battery_dt";
+		htc,fastchg-current-ma = <3250>;
+		htc,batt-full-current-ma = <570>;
+		htc,health-level = <6>;
+		htc,batt-health-good = <2>;
+		htc,ai-charge-enable = <1>;
+		htc,chg-vbatt-thresholds = <4250 4250 4250 4250 4250 4250>;	/* htc,health-level * 1 */
+		htc,chg-vbatt-recover-thresholds = <4000 4000 4000 4000 4000 4000>;
+		htc,chg-temp-thresholds = <(-10000) 170>,			/* htc,health-level * 2 */
+					  <     150 220>,
+					  <     420 200>,			/* GOOD */
+					  <     450 400>,
+					  <     470 430>,
+					  <   10000 450>;
+		htc,chg-fcc-limits = <						/* 4 * htc,health-level */
+			2650 3250 3250 3250 1500 1500
+			2650 3250 3250 1000 1000 1000
+			 900 3250 3250 3250 1500    0
+			 900 3250 3250 1000 1000    0
+		>;
+		htc,qc2-chg-fcc-limits = <					/* 4 * htc,health-level */
+			2650 3250 3250 2000 1500 1500
+			2650 3250 3250 1000 1000 1000
+			 900 1900 1900 2000 1500    0
+			 900 1900 1900 1000 1000    0
+		>;
+		htc,qc3-chg-fcc-limits = <					/* 4 * htc,health-level */
+			2650 3250 3250 2100 1500 1500
+			2650 3250 3250 1500 1500 1500
+			 900 1900 1900 2100 1500    0
+			 900 1900 1900 1500 1500    0
+		>;
+	};
+};
+
+&i2c_5 {
+	status = "okay";
+	qcom,disable-dma;
+};
+
+&i2c_6 {
+	status = "disabled";
+	/delete-node/ nq@28;
+};
+
+&i2c_7 {
+	status = "okay";
+	qcom,disable-dma;
+	/delete-node/ qcom,smb138x@8;
+};
+
+&i2c_8 {
+	status = "okay";
+	qcom,disable-dma;
+};
+
+&i2c_9 {
+	status = "okay";
+	qcom,disable-dma;
+};
+
+&i2c_5_active {
+	config {
+		drive-strength = <8>;
+	};
+};
+&i2c_5_sleep {
+	config {
+		drive-strength = <8>;
+	};
+};
+
+&i2c_7_active {
+	config {
+		drive-strength = <8>;
+	};
+};
+&i2c_7_sleep {
+	config {
+		drive-strength = <8>;
+	};
+};
+
+&i2c_8_active {
+	config {
+		drive-strength = <8>;
+	};
+};
+&i2c_8_sleep {
+	config {
+		drive-strength = <8>;
+	};
+};
+
+&i2c_9_active {
+	config {
+		drive-strength = <8>;
+	};
+};
+&i2c_9_sleep {
+	config {
+		drive-strength = <8>;
+	};
+};
+
+&nanohub {
+	sensorhub,shared-flash-banks = <6 0x08040000 0x20000>,
+				       <7 0x08060000 0x20000>;
+	sensorhub,num-shared-flash-banks = <2>;
+	sensorhub,flash-page-size = <2048>;
+	sensorhub,gpio1 = <&tlmm 93 0x00>;
+	sensorhub,gpio2 = <&tlmm 94 0x00>;
+};
+
+&pm8998_gpios {
+    gpio@d200 {                     /* GPIO 19 - EG_3V3_EN */
+        qcom,mode = <1>;            /* Digital output*/
+        qcom,out-strength = <1>;    /* Low drive strength*/
+        qcom,pull = <5>;            /* No Pull */
+        qcom,vin-sel = <1>;
+        qcom,src-sel = <0>;
+        qcom,invert = <1>;          /* Enable invert, direction high */
+        qcom,master-en = <1>;       /* Enable GPIO */
+        output-high;
+        status = "okay";
+    };
+};

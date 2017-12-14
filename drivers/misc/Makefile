@@ -70,3 +70,4 @@ obj-$(CONFIG_HTC_FLASHLIGHT) += htc_flashlight.o
 obj-$(CONFIG_VIB_TRIGGERS)	+= vib-triggers.o
 obj-$(CONFIG_FPR_FPC)  += fpr_FingerprintCard/
 obj-$(CONFIG_GOODIX_FP)  += goodix_fp/
+obj-$(CONFIG_UCI)  += uci/
